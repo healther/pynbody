@@ -38,9 +38,9 @@ __global__ advance(const __restrict__ double * r_old, const __restrict__ double 
                 (particle_z-r_old[i + 2*number_of_particles])*(particle_x-r_old[i + 2*number_of_particles]) 
                     );
 
-            acceleration_vx = mass[i] * (r_old[i] - particle_x) / distance**3;
-            acceleration_vy = mass[i] * (r_old[i + number_of_particles] - particle_x) / distance**3;
-            acceleration_vz = mass[i] * (r_old[i + 2*number_of_particles] - particle_x) / distance**3;
+            acceleration_x += mass[i] * (r_old[i] - particle_x) / distance**3;
+            acceleration_y += mass[i] * (r_old[i + number_of_particles] - particle_x) / distance**3;
+            acceleration_z += mass[i] * (r_old[i + 2*number_of_particles] - particle_x) / distance**3;
         
         }
         
@@ -48,9 +48,9 @@ __global__ advance(const __restrict__ double * r_old, const __restrict__ double 
         r_new[particle_id + number_of_particles] = particle_vy * timestep;
         r_new[particle_id + 2 * number_of_particles] = particle_vz * timestep;
         
-        v_new[particle_id] = acceleration_vx * timestep;
-        v_new[particle_id + number_of_particles] = acceleration_vy * timestep;
-        v_new[particle_id + 2 * number_of_particles] = acceleration_vz * timestep;
+        v_new[particle_id] = acceleration_x * timestep;
+        v_new[particle_id + number_of_particles] = acceleration_y * timestep;
+        v_new[particle_id + 2 * number_of_particles] = acceleration_z * timestep;
     }
 }
 """
@@ -78,8 +78,8 @@ def integrate(stepsize = .01, stores = 5, steps=10000, number_of_particles=2**10
         v = vs_gpu[old].get_async()
         advance.prepared_call_async(block_size, grid_size ,gpu_rs[old], gpu_vs[old], gpu_mass, gpu_rs[new], gpu_vs[new], number_of_particles)
         
-        np.write("step{i:4}_r".format(i)+".dat", r)
-        np.write("step{i:4}_v".format(i)+".dat", r)
+        np.write("step{i:4}_r".format(i*stepsize)+".dat", r)
+        np.write("step{i:4}_v".format(i*stepsize)+".dat", r)
         
         old, new = new, (new+1)%stores
 
