@@ -9,19 +9,19 @@ from pycuda.compiler import SourceModule
 
 
 advance_kernel = """
-__global__ advance(const __restrict__ double * r_old, const __restrict__ double * v_old, const __restrict__ double * mass, double * r_new, double * v_new, int number_of_particles){
-    int tx = threadIdx.x + blockDim.x * blockIdx.x;
+__global__ void advance(const double * __restrict__ r_old, const double * __restrict__ v_old, const double * __restrict__ mass, double * __restrict__ r_new, double * __restrict__ v_new, const int number_of_particles){
+    const int tx = threadIdx.x + blockDim.x * blockIdx.x;
     
     if(tx>=n) return;
     
-    int particle_id = tx;
-    double particle_x = r_old[particle_id];
-    double particle_y = r_old[particle_id + number_of_particles];
-    double particle_z = r_old[particle_id + 2*number_of_particles];
-    double particle_vx = r_old[particle_id];
-    double particle_vy = r_old[particle_id + number_of_particles];
-    double particle_vz = r_old[particle_id + 2*number_of_particles];
-    double particle_mass = mass[particle_id];
+    const int particle_id = tx;
+    const double particle_x = r_old[particle_id];
+    const double particle_y = r_old[particle_id + number_of_particles];
+    const double particle_z = r_old[particle_id + 2*number_of_particles];
+    const double particle_vx = r_old[particle_id];
+    const double particle_vy = r_old[particle_id + number_of_particles];
+    const double particle_vz = r_old[particle_id + 2*number_of_particles];
+    const double particle_mass = mass[particle_id];
     
     double distance = 0.;
     double acceleration_vx = 0.;
