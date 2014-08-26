@@ -9,14 +9,10 @@ from pycuda.compiler import SourceModule
 
 
 advance_kernel = """
-#include <math.h>
-
-#define timestep .01
-
 __global__ void advance(const double * __restrict__ r_old, const double * __restrict__ v_old, const double * __restrict__ mass, double * __restrict__ r_new, double * __restrict__ v_new, const int number_of_particles){
     const int tx = threadIdx.x + blockDim.x * blockIdx.x;
     
-    if(tx>=number_of_particles) return;
+    if(tx>=n) return;
     
     const int particle_id = tx;
     const double particle_x = r_old[particle_id];
@@ -28,19 +24,23 @@ __global__ void advance(const double * __restrict__ r_old, const double * __rest
     const double particle_mass = mass[particle_id];
     
     double distance = 0.;
-    double acceleration_x = 0.;
-    double acceleration_y = 0.;
-    double acceleration_z = 0.;
+    double acceleration_vx = 0.;
+    double acceleration_vy = 0.;
+    double acceleration_vz = 0.;
     
     for(int i=0; i<number_of_particles; ++i){
-        if(i!=particle_id){
-            distance = (particle_x-r_old[i]) * (particle_x-r_old[i]);
-            distance += (particle_y-r_old[i+number_of_particles]) * (particle_x-r_old[i+number_of_particles]) ;
-            distance += (particle_z-r_old[i+2*number_of_particles]) * (particle_x-r_old[i+2*number_of_particles]) ;
-            distance = sqrt(distance);
-            acceleration_x += mass[i] * (r_old[i] - particle_x) / pow(distance,3);
-            acceleration_y += mass[i] * (r_old[i + number_of_particles] - particle_x) / pow(distance,3);
-            acceleration_z += mass[i] * (r_old[i + 2*number_of_particles] - particle_x) / pow(distance,3);
+        if(i != particle_id){
+            distance = sprt( 
+                (particle_x-r_old[i])*(particle_x-r_old[i]) 
+                    +
+                (particle_y-r_old[i + number_of_particles])*(particle_x-r_old[i  + number_of_particles]) 
+                    +
+                (particle_z-r_old[i + 2*number_of_particles])*(particle_x-r_old[i + 2*number_of_particles]) 
+                    );
+
+            acceleration_x += mass[i] * (r_old[i] - particle_x) / distance**3;
+            acceleration_y += mass[i] * (r_old[i + number_of_particles] - particle_x) / distance**3;
+            acceleration_z += mass[i] * (r_old[i + 2*number_of_particles] - particle_x) / distance**3;
         
         }
         
@@ -57,7 +57,7 @@ __global__ void advance(const double * __restrict__ r_old, const double * __rest
 
 def integrate(stepsize = .01, stores = 5, steps=10000, number_of_particles=2**10):
     gpu_r, gpu_v, gpu_mass = create_particles(number_of_particles)
-    number_of_particles = np.int64(number_of_particles)
+    number_of_particles = np.int32(number_of_particles)
     gpu_rs, gpu_vs = [gpu_r], [gpu_v]
     
     for i in xrange(stores-1):
@@ -66,20 +66,20 @@ def integrate(stepsize = .01, stores = 5, steps=10000, number_of_particles=2**10
         
     advance = SourceModule(advance_kernel).get_function("advance")
     advance.prepare([np.intp, np.intp, np.intp, np.intp, np.intp, np.int32])
-    stream = drv.Stream()
-    block_size = (32,1,1)
-    grid_size = (int(number_of_particles/32), 1)
     
-    advance.prepared_call(grid_size, block_size ,gpu_rs[0].gpudata, gpu_vs[0].gpudata, gpu_mass.gpudata, gpu_rs[1].gpudata, gpu_vs[1].gpudata, number_of_particles)
+    block_size = (32,0,0)
+    grid_size = (int(number_of_particles/32), 0, 0)
+    
+    advance.prepared_call(block_size, grid_size ,gpu_r[0], gpu_v[0], gpu_mass, gpu_r[1], gpu_v[1], number_of_particles)
 
     old, new = 1, 2
     for i in xrange(steps):
-        r = gpu_rs[old].get_async()
-        v = gpu_vs[old].get_async()
-        advance.prepared_async_call(grid_size, block_size, stream, gpu_rs[old].gpudata, gpu_vs[old].gpudata, gpu_mass.gpudata, gpu_rs[new].gpudata, gpu_vs[new].gpudata, number_of_particles)
+        r = rs_gpu[old].get_async()
+        v = vs_gpu[old].get_async()
+        advance.prepared_call_async(block_size, grid_size ,gpu_rs[old], gpu_vs[old], gpu_mass, gpu_rs[new], gpu_vs[new], number_of_particles)
         
-        np.save("step{:3.5}_r".format(i*stepsize)+".dat", r)
-        np.save("step{:3.5}_v".format(i*stepsize)+".dat", r)
+        np.write("step{i:4}_r".format(i*stepsize)+".dat", r)
+        np.write("step{i:4}_v".format(i*stepsize)+".dat", r)
         
         old, new = new, (new+1)%stores
 
