@@ -1,4 +1,6 @@
 *.dat
 *prof
 *.pyc
+*.o
+*.out
 .python-version
