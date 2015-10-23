@@ -22,7 +22,7 @@ convert{T<:Real}(::Type{Particle{T}}, f::Particle) = Particle{T}(convert(T, f.po
 function calcacceleration!{T<:Real}(px::Particle{T}, py::Particle{T})
     sep::Force{T} = px.position::Force{T}-py.position::Force{T}
     d2::Float64 = norm2(sep)
-    px.acceleration -= px.mass*py.mass/d2/sqrt(d2)*sep
+    px.acceleration -= (px.mass*py.mass/d2/sqrt(d2)) * sep
 end
 
 end # module
