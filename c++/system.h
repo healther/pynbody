@@ -37,7 +37,7 @@ public:
             for (std::vector<Particle>::iterator pj = particles.begin(); pj != particles.end(); ++pj)
             {
                 if(pi!=pj){
-                    pi->calcacceleration(*pj);
+                    pi->calcforce(*pj);
                 }
             }
         }

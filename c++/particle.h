@@ -15,14 +15,13 @@ public:
         a = Vector3D(0.,0.,0.);
     }
 
-    void calcacceleration(Particle p) {
+    void calcforce(Particle p) {
         Vector3D sep = r-p.r;
         double d2 = sep*sep;
-        Vector3D acc = Vector3D(0.,0.,0.);
+        d2 = -p.m*m / d2 / sqrt(d2);
         for (int i = 0; i < 3; ++i)
         {
-            acc[i] = -p.m * sep[i] / d2 / sqrt(d2);
+            a[i] += d2 * sep[i] ;
         }
-        a += acc;
     }
 } ;
