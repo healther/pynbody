@@ -1,3 +1,6 @@
+#ifndef H_PARTICLE
+#define H_PARTICLE
+
 
 #include "vector3d.h"
 
@@ -8,16 +11,21 @@ public:
 
     Particle() {}
 
-    Particle(double _m, Vector3D _r, Vector3D _v){
+    Particle(double const _m, Vector3D const _r, Vector3D const _v){
         m = _m;
         r = _r;
         v = _v;
         a = Vector3D(0.,0.,0.);
     }
 
-    void calcforce(Particle p) {
+    void calculateForce(Particle const & p) {
         Vector3D sep = r-p.r;
         double d2 = sep*sep;
+        if (d2<1E-15)
+        {
+            std::cout << "fail" << std::endl;
+            return ;
+        }
         d2 = -p.m*m / d2 / sqrt(d2);
         for (int i = 0; i < 3; ++i)
         {
@@ -25,3 +33,6 @@ public:
         }
     }
 } ;
+
+
+#endif

@@ -1,4 +1,5 @@
-
+#ifndef H_VECTOR3D
+#define H_VECTOR3D
 
 class Vector3D
 {
@@ -150,5 +151,6 @@ class Vector3D
 };
 
 
+#endif
 
 

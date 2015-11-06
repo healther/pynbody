@@ -10,10 +10,12 @@ int main(int argc, char const *argv[])
     int n = 10000;
     System s(n);
     
+    // int interactions = s.run_tree(.8);
+    // std::cout << interactions << std::endl;
     s.run();
     for (int i = 0; i < n; ++i)
     {
-        // std::cout << s.particles[i].a[0] << "\t" << s.particles[i].a[1] << "\t" << s.particles[i].a[2] << std::endl;
+        //std::cout << s.particles[i].a[0] << "\t" << s.particles[i].a[1] << "\t" << s.particles[i].a[2] << std::endl;
     }
     Vector3D a = Vector3D(0.,0.,0.);
     for (int i = 0; i < n; ++i)

@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 
+#include "tree.h"
 #include "particle.h"
 
 int seed = 42424242;
@@ -37,10 +38,20 @@ public:
             for (std::vector<Particle>::iterator pj = particles.begin(); pj != particles.end(); ++pj)
             {
                 if(pi!=pj){
-                    pi->calcforce(*pj);
+                    pi->calculateForce(*pj);
                 }
             }
         }
+    }
+
+    int run_tree(double theta) {
+        Tree t = Tree(theta);
+        for (std::vector<Particle>::iterator p = particles.begin(); p != particles.end(); ++p)
+        {
+            t.addParticle(*p);
+        }
+        int interactions = t.calculateForce();
+        return interactions;
     }
 } ;
 
