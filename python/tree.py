@@ -15,7 +15,7 @@ class Tree:
         self.nparticles += 1
 
     def calculateForce(self):
-        #self.root.generateMultipole()
+        self.root.generateMultipole()
         interactions = 0
         for p in self.particles:
             interactions += self.root.calculateForce(p)
@@ -30,7 +30,7 @@ class Node:
         self.particle = None
         self.pseudoparticle = particle.Particle(r=[0.,0.,0.],v=[0.,0.,0.],m=0.)
         self.nparticles = 0
-        self.particles = []
+        #self.particles = []
         self.subnodes = 8*[None]
 
     def addParticle(self, newpart):
@@ -50,9 +50,9 @@ class Node:
             self.createSubNode(idx)
             self.subnodes[idx].addParticle(newpart)
         
-        self.particles.append(newpart)
+        #self.particles.append(newpart)
         self.nparticles += 1
-        self.updatePseudoParticle(newpart)
+        #self.updatePseudoParticle(newpart)
 
     def findSubNode(self, part):
         rel = [x<y for (x,y) in zip(self.r, part.r)]
@@ -68,22 +68,15 @@ class Node:
         self.pseudoparticle.absorbParticle(part)
 
     def generateMultipole(self):
+        self.pseudoparticle = particle.Particle(r=[0.,0.,0.],v=[0.,0.,0.],m=0.)
         if self.nparticles == 0:
             print("error")
-            self.pseudoparticle.r[:] = [0.,0.,0.]
-            self.pseudoparticle.v[:] = [0.,0.,0.]
-            self.pseudoparticle.a[:] = [0.,0.,0.]
-            self.pseudoparticle.m = 0.
         elif self.nparticles == 1:
-            self.pseudoparticle.r[:] = self.particles[0].r
-            self.pseudoparticle.v[:] = self.particles[0].v
-            self.pseudoparticle.a[:] = self.particles[0].a
-            self.pseudoparticle.m = self.particles[0].m
+            self.pseudoparticle.r[:] = self.particle.r
+            self.pseudoparticle.v[:] = self.particle.v
+            self.pseudoparticle.a[:] = self.particle.a
+            self.pseudoparticle.m = self.particle.m
         else:
-            self.pseudoparticle.r[:] = [0.,0.,0.]
-            self.pseudoparticle.v[:] = [0.,0.,0.]
-            self.pseudoparticle.a[:] = [0.,0.,0.]
-            self.pseudoparticle.m = 0.
             for subnode in self.subnodes :
                 if subnode is not None:
                     subnode.generateMultipole()
@@ -93,6 +86,8 @@ class Node:
                         self.pseudoparticle.a[i] += subnode.pseudoparticle.a[i]
                     self.pseudoparticle.m += subnode.pseudoparticle.m
             self.pseudoparticle.r = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.r]
+            self.pseudoparticle.v = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.v]
+            self.pseudoparticle.a = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.a]
 
     def calculateForce(self, part):
         d = [ri-rj for (ri,rj) in zip(part.r, self.pseudoparticle.r)]
