@@ -5,6 +5,7 @@ import particle
 class Tree:
     def __init__(self, theta = 0.2):
         self.nparticles = 0
+        self.maxdepth = 1
         self.theta = theta
         self.root = Node(r=[0.,0.,0.], size=1., theta=self.theta)
         self.particles = []
@@ -59,7 +60,7 @@ class Node:
         return sum(rel[i]*2**i for i in range(3))
 
     def createSubNode(self, idx):
-        rel = [idx&1, idx&2, idx&4]
+        rel = [idx&1, (idx&2)//2, (idx&4)//4]
         newr = [x-.25*self.size+.5*self.size*y for (x,y) in zip(self.r, rel)]
         if self.subnodes[idx] is None:
             self.subnodes[idx] = Node(newr, self.size/2., theta = self.theta)
@@ -72,22 +73,24 @@ class Node:
         if self.nparticles == 0:
             print("error")
         elif self.nparticles == 1:
-            self.pseudoparticle.r[:] = self.particle.r
-            self.pseudoparticle.v[:] = self.particle.v
-            self.pseudoparticle.a[:] = self.particle.a
-            self.pseudoparticle.m = self.particle.m
+            # self.pseudoparticle.r[:] = self.particle.r
+            # self.pseudoparticle.v[:] = self.particle.v
+            # self.pseudoparticle.a[:] = self.particle.a
+            # self.pseudoparticle.m = self.particle.m
+            self.pseudoparticle.absorbParticle(self.particle)
         else:
             for subnode in self.subnodes :
                 if subnode is not None:
                     subnode.generateMultipole()
-                    for i in range(3):
-                        self.pseudoparticle.r[i] += subnode.pseudoparticle.r[i]
-                        self.pseudoparticle.v[i] += subnode.pseudoparticle.v[i]
-                        self.pseudoparticle.a[i] += subnode.pseudoparticle.a[i]
-                    self.pseudoparticle.m += subnode.pseudoparticle.m
-            self.pseudoparticle.r = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.r]
-            self.pseudoparticle.v = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.v]
-            self.pseudoparticle.a = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.a]
+                    # for i in range(3):
+                    #     self.pseudoparticle.r[i] += subnode.pseudoparticle.r[i]
+                    #     self.pseudoparticle.v[i] += subnode.pseudoparticle.v[i]
+                    #     self.pseudoparticle.a[i] += subnode.pseudoparticle.a[i]
+                    # self.pseudoparticle.m += subnode.pseudoparticle.m
+                    self.pseudoparticle.absorbParticle(subnode.pseudoparticle)
+            # self.pseudoparticle.r = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.r]
+            # self.pseudoparticle.v = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.v]
+            # self.pseudoparticle.a = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.a]
 
     def calculateForce(self, part):
         d = [ri-rj for (ri,rj) in zip(part.r, self.pseudoparticle.r)]

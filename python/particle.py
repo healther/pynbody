@@ -22,7 +22,8 @@ class Particle():
     def calculateForce(self, particle):
         assert(isinstance(particle, Particle))
         assert(particle!=self)
-        d = [ri-rj for (ri,rj) in zip(self.r, particle.r)]
+        # print(particle.m, particle.r, self.m, self.r)
+        d = [ri-rj for (ri,rj) in zip(particle.r, self.r)]
         d2 = sum(dd*dd for dd in d)
         if d2<1E-14:
             return
