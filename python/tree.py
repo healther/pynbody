@@ -22,6 +22,70 @@ class Tree:
             interactions += self.root.calculateForce(p)
         return interactions
 
+    def calculateFMM(self):
+        interactions = 0
+        self.root.generateMultipole()
+        stack = [(self.root, self.root)]
+        while stack:
+        # for A,B in stack:
+            A, B = stack.pop()
+            if A is None and B is None:
+                continue
+            interactions += 1
+            if A.size>B.size:
+                for a in filter(None, A.subnodes):
+                    stack.append(self._interact(a,B))
+            else:
+                for b in filter(None, B.subnodes):
+                    stack.append(self._interact(A,b))
+        self.root.evaluateMultipole()
+        return interactions
+
+    def _interact(self, A, B):
+        if 1==A.nparticles and 1==B.nparticles:
+            # leaf leaf interaction calculate directly
+            return(self._P2P(A,B))
+        elif 1==A.nparticles:
+            # source is leaf
+            return(self._L2M(A,B))
+        elif 1==B.nparticles:
+            # sink is leave
+            return(self._M2L(A,B))
+        elif self._MAC2(A,B):
+            # nodes far away
+            return(self._M2M(A,B))
+        else:
+            return (A, B)
+
+    def _P2P(self, A, B):
+        if A is not B:
+            B.particle.calculateForce(A.particle)
+        return (None, None)
+
+    def _MAC2(self, A, B):
+        d2 = sum((ar-br)*(ar-br) for ar, br in zip(A.r, B.r))
+        return (A.size+B.size)*(A.size+B.size) < d2 * self.theta
+
+    def _MAC(self, A, B):
+        d2 = sum((ar-br)*(ar-br) for ar, br in zip(A.r, B.r))
+        return A.size*A.size < d2 * self.theta
+
+    def _M2M(self, A, B):
+        B.pseudoparticle.calculateForce(A.pseudoparticle)        
+        return (None, None)
+
+    def _L2M(self, A, B):
+        if self._MAC(B,A):
+            B.pseudoparticle.calculateForce(A.particle)
+            return (None, None)
+        else:
+            return (A,B)  
+    
+    def _M2L(self, A, B):
+        if self._MAC(A,B):
+            B.particle.calculateForce(A.pseudoparticle) 
+            return(None, None)
+        return(A,B)       
 
 class Node:
     def __init__(self, r, size, theta = 0.7):
@@ -73,24 +137,33 @@ class Node:
         if self.nparticles == 0:
             print("error")
         elif self.nparticles == 1:
-            # self.pseudoparticle.r[:] = self.particle.r
-            # self.pseudoparticle.v[:] = self.particle.v
-            # self.pseudoparticle.a[:] = self.particle.a
-            # self.pseudoparticle.m = self.particle.m
-            self.pseudoparticle.absorbParticle(self.particle)
+            self.pseudoparticle.r[:] = self.particle.r
+            self.pseudoparticle.v[:] = self.particle.v
+            self.pseudoparticle.a[:] = self.particle.a
+            self.pseudoparticle.m = self.particle.m
         else:
             for subnode in self.subnodes :
                 if subnode is not None:
                     subnode.generateMultipole()
-                    # for i in range(3):
-                    #     self.pseudoparticle.r[i] += subnode.pseudoparticle.r[i]
-                    #     self.pseudoparticle.v[i] += subnode.pseudoparticle.v[i]
-                    #     self.pseudoparticle.a[i] += subnode.pseudoparticle.a[i]
-                    # self.pseudoparticle.m += subnode.pseudoparticle.m
-                    self.pseudoparticle.absorbParticle(subnode.pseudoparticle)
-            # self.pseudoparticle.r = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.r]
-            # self.pseudoparticle.v = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.v]
-            # self.pseudoparticle.a = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.a]
+                    for i in range(3):
+                        self.pseudoparticle.r[i] += subnode.pseudoparticle.r[i] * subnode.pseudoparticle.m
+                        self.pseudoparticle.v[i] += subnode.pseudoparticle.v[i] * subnode.pseudoparticle.m
+                        self.pseudoparticle.a[i] += subnode.pseudoparticle.a[i] * subnode.pseudoparticle.m
+                    self.pseudoparticle.m += subnode.pseudoparticle.m
+            self.pseudoparticle.r = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.r]
+            self.pseudoparticle.v = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.v]
+            self.pseudoparticle.a = [cm/self.pseudoparticle.m for cm in self.pseudoparticle.a]
+
+    def evaluateMultipole(self):
+        for s in filter(None, self.subnodes):
+            # push to subnodes
+            for i in range(3):
+                s.pseudoparticle.a[i] += self.pseudoparticle.a[i]/self.pseudoparticle.m*s.pseudoparticle.m
+            s.evaluateMultipole()
+        if self.nparticles is 1:
+            # push to particle
+            for i in range(3):
+                self.particle.a[i] += self.pseudoparticle.a[i]
 
     def calculateForce(self, part):
         d = [ri-rj for (ri,rj) in zip(part.r, self.pseudoparticle.r)]
