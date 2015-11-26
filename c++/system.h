@@ -95,12 +95,26 @@ public:
 
     int run_tree(double theta) {
         Tree t = Tree(theta);
+        int i = 0;
+        for (std::vector<Particle>::iterator p = particles.begin(); p != particles.end(); ++p)
+        {
+            // std::cout << i++ << std::endl;
+            t.addParticle(*p);
+        }
+        // std::cout << "generate" << std::endl;
+        // std::cout << "calculate" << std::endl;
+        int interactions = t.calculateForce();
+        t.dump();
+        return interactions;
+    }
+
+    int run_fmm(double theta) {
+        Tree t = Tree(theta);
         for (std::vector<Particle>::iterator p = particles.begin(); p != particles.end(); ++p)
         {
             t.addParticle(*p);
         }
-        t.generateMultipole();
-        int interactions = t.calculateForce();
+        int interactions = t.calculateForceFMM();
         return interactions;
     }
 } ;
