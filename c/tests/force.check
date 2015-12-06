@@ -1,0 +1,19 @@
+
+#include "../src/force.h"
+
+#test force_dist_test
+    struct Force f = {1.,2.,3.};
+    struct Force g = {-1.,.5,1.5};
+    struct Force h = dist(f,g);
+    fail_unless(h.x==2.);
+    fail_unless(h.y==1.5);
+    fail_unless(h.z==1.5);
+
+#test force_dist2_test
+    struct Force f = {1.,2.,3.};
+    struct Force g = {-1.,1.,0.};
+    fail_unless(dist2(f,g)==14.);
+
+#test force_abs2_test
+    struct Force g = {-1.,1.,0.};
+    fail_unless(abs2(g)==2.);

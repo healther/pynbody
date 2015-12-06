@@ -1,0 +1,87 @@
+
+#include "../src/particle.h"
+
+#test particle_setzero_test
+    struct Particle p;
+    setzero(&p);
+    ck_assert(p.position.x==0.);
+    ck_assert(p.position.y==0.);
+    ck_assert(p.position.z==0.);
+    ck_assert(p.velocity.x==0.);
+    ck_assert(p.velocity.y==0.);
+    ck_assert(p.velocity.z==0.);
+    ck_assert(p.acceleration.x==0.);
+    ck_assert(p.acceleration.y==0.);
+    ck_assert(p.acceleration.z==0.);
+    ck_assert(p.mass==0.);
+
+#test particle_setpart_test
+    struct Particle p = {
+        .position={1.,.5,-.5},
+        .velocity={-.5,1.5,-2.},
+        .acceleration={-.1,.2,.3},
+        .mass=.2
+    };
+    struct Particle h;
+    setpart(&h,&p);
+    ck_assert(h.position.x==1.);
+    ck_assert(h.position.y==0.5);
+    ck_assert(h.position.z==-0.5);
+    ck_assert(h.velocity.x==-0.5);
+    ck_assert(h.velocity.y==1.5);
+    ck_assert(h.velocity.z==-2.);
+    ck_assert(h.acceleration.x==-.1);
+    ck_assert(h.acceleration.y==0.2);
+    ck_assert(h.acceleration.z==0.3);
+    ck_assert(h.mass==0.2);
+
+#test particle_absorbpart_test
+    struct Particle p = {
+        .position={1.,.5,-.5},
+        .velocity={-.5,1.5,-2.},
+        .acceleration={-.1,.2,.3},
+        .mass=.2
+    };
+    struct Particle h = {
+        .position={-2.,-1.,1.},
+        .velocity={-.5,1.5,-2.},
+        .acceleration={-.1,.2,.3},
+        .mass=.1
+    };
+    absorbpart(&h,&p);
+    ck_assert(h.position.x==0.);
+    ck_assert(h.position.y==0.);
+    ck_assert(h.position.z==0.);
+    ck_assert(h.velocity.x==-0.5);
+    ck_assert(h.velocity.y==1.5);
+    ck_assert(h.velocity.z==-2.);
+    ck_assert(h.acceleration.x==-.1);
+    ck_assert(h.acceleration.y==0.2);
+    ck_assert(h.acceleration.z==0.3);
+    ck_assert(h.mass==0.2+.1);
+
+#test particle_calculateForcePP_test
+    struct Particle p = {
+        .position={1.,.5,-.5},
+        .velocity={-.5,1.5,-2.},
+        .acceleration={0.,0.,0.},
+        .mass=.2
+    };
+    struct Particle h = {
+        .position={-2.,-1.,1.},
+        .velocity={-.5,1.5,-2.},
+        .acceleration={0.,0.,0.},
+        .mass=.1
+    };
+    calculateForcePP(&p, &h);
+    ck_assert(fabs(p.acceleration.x+0.0012096245643374)<1E-9);
+    ck_assert(fabs(p.acceleration.y+0.0006048122821687)<1E-9);
+    ck_assert(fabs(p.acceleration.z-0.0006048122821687)<1E-9);
+    ck_assert(p.position.x==1.);
+    ck_assert(p.position.y==.5);
+    ck_assert(p.position.z==-.5);
+    ck_assert(p.velocity.x==-0.5);
+    ck_assert(p.velocity.y==1.5);
+    ck_assert(p.velocity.z==-2.);
+
+
