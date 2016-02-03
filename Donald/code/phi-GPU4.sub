@@ -1,0 +1,41 @@
+#PBS -N phi-GPU4
+
+### HYDRA part of the cluster GF 570 GTX; 8 nodes; 2 GPU+CPU per node; Max: 16 MPI + GPU proc !!!
+###PBS -q gpu_hya
+###PBS -l nodes=4:ppn=2
+
+### HYDRA part of the cluster; 8 nodes; 2 CPU per node; Max: 16 MPI proc !!!
+###PBS -q cpu_hya
+###PBS -l nodes=4:ppn=4
+
+### KEPLER part of the cluster K20m; 12 nodes; 1 GPU+CPU per node; Max = 12 MPI + GPU proc !!!
+#PBS -q gpu_wn
+#PBS -l nodes=1:ppn=1
+
+### KEPLER part of the cluster; 12 nodes; 15 CPU per node; Max = 180 MPI proc !!!
+###PBS -q cpu_wn
+###PBS -l nodes=4:ppn=4
+
+#PBS -r n
+#PBS -m n
+#PBS -k oe
+#PBS -V
+
+###PBS -l walltime=9000:00:00
+
+#!/bin/bash -x
+
+cd $PBS_O_WORKDIR
+export PATH=$PATH:$PBS_O_WORKDIR
+
+###export GPU_LIST="0 1"
+###cp sapporo.config.ini sapporo.config
+
+OUT_FILE=phi-GPU4.hosts
+>$OUT_FILE
+
+cat $PBS_NODEFILE > $OUT_FILE
+
+/usr/lib64/openmpi/bin/mpirun -hostfile $PBS_NODEFILE -np 1 ./gpu-4th < /dev/null 1> phi-GPU4.out 2> phi-GPU4.err
+
+exit 0
