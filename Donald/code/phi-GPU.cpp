@@ -97,7 +97,7 @@ static double time_cur, Timesteps=0.0, n_act_sum=0.0, g6_calls=0.0;
 static double CPU_time_real0, CPU_time_user0, CPU_time_syst0;
 static double CPU_time_real,  CPU_time_user,  CPU_time_syst;
 
-#define PROFILE
+// #define PROFILE
 #ifdef PROFILE
 extern double wtime()
 {
@@ -236,7 +236,7 @@ static void energy(int myRank){
 	
 
 	if(myRank == 0){
-		printf("%.4E   %.3E %.3E   % .6E % .6E % .6E % .6E   %.6E \n",
+		printf("%.4E   %.3E %.3E   % .6E % .6E % .6E % .16E   %.6E \n",
 			   time_cur, Timesteps, n_act_sum,
 			   E_pot, E_kin, E_pot+E_kin, 
 			   eerr,
@@ -440,6 +440,8 @@ int main(int argc, char *argv[]){
 	double dt_max = 1. / (1 << 3);
 	while(dt_max >= std::min(dt_disk, dt_contr)) dt_max *= 0.5;
 	double dt_min = 1. / (1 << 30);
+	// dt_min /= (1<<10);
+	fprintf(stdout, "dt_min: %e nbut\n", dt_min);
 
 	int n_loc = nbody/n_proc;
 	double t_disk  = time_cur + dt_disk;
@@ -530,6 +532,8 @@ int main(int argc, char *argv[]){
 	double t_scan = 0.0, t_pred = 0.0, t_preda = 0.0, t_jsend = 0.0, t_isend = 0.0, t_force = 0.0, t_recv = 0.0, t_comm = 0.0, t_corr = 0.0;
 
 	while(time_cur <= t_end){
+		// fprintf(stdout, "Current timestep, %1.16E \n", time_cur);
+
 		double t0 = wtime();
 #if 0
 		double min_t = t_plus_dt[0];

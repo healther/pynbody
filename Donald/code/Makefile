@@ -7,7 +7,8 @@
 ###CCC=/usr/lib64/openmpi/bin/mpiCC
 ###CCC=mpiCC.openmpi
 ###CCC=mpiCC
-CCC=/usr/local/Cellar/open-mpi/1.10.1_1/bin/mpicc
+CCC=/usr/local/Cellar/open-mpi/1.10.1_1/bin/mpic++
+###CCC=gcc-5 -I/usr/local/Cellar/open-mpi/1.10.1_1/include -L/usr/local/opt/libevent/lib -L/usr/local/Cellar/open-mpi/1.10.1_1/lib -lmpi
 
 
 

@@ -41,10 +41,11 @@ struct Particle{
 		pot = fo.pot;
 		t  = tsys;
 		double dt0 = 0.1 * eta * sqrt(acc.norm2()/jrk.norm2());
-		assert(dt0 > dtmin);
+		// assert(dt0 > dtmin);
 		dt0 = std::max(dt0, dtmin);
-		dt = dtmax;
-		while(dt >= dt0) dt *= 0.5;
+		// dt = dtmax;
+		// while(dt >= dt0) dt *= 0.5;
+		dt = dtmin;
 	}
 	void correct(double dtmin, double dtmax, double eta, const Force &fo){
 		double h = 0.5 * dt;
@@ -76,11 +77,12 @@ struct Particle{
 		double t1 = sqrt(aa*ss) + jj;
 		double t2 = sqrt(jj*cc) + ss;
 		double dt0 = eta * sqrt(t1/t2);
-		assert(dt0 > dtmin);
+		// assert(dt0 > dtmin);
 		dt0 = std::max(dt0, dtmin);
-		dt = dtmax;
-		while(dt >= dt0) dt *= 0.5;
-		while(fmod(t, dt) != 0.0) dt *= 0.5;
+		// dt = dtmax;
+		// while(dt >= dt0) dt *= 0.5;
+		// while(fmod(t, dt) != 0.0) dt *= 0.5;
+		dt = dtmin;
 	}
 };
 
